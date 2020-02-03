@@ -1,0 +1,97 @@
+---
+title: "DATA607 | Week1 Assignment"
+author: "Ait Elmouden Abdellah"
+date: "01/30/2020"
+output:
+  html_document:
+    df_print: paged
+---
+### Objective of the Assignment:
+The goal of this assignment is to practice Loading Data into a Data Frame, study the dataset and the associated description of the data. The data was available from fivethirtyeight.com datasets. the selected data is behind an article about [Picking A College Major](https://fivethirtyeight.com/features/the-economic-guide-to-picking-a-college-major/). 
+All data is from American Community Survey 2010-2012 Public Use Microdata Series. , it was uploaded to [github](https://github.com/aaitelmouden/DATA607S2020/blob/master/Week1/recent-grads.csv).
+
+### Data Preparation:
+
+*First we will load the data from Github*
+
+```{r}
+
+CollegeMajors <- read.csv("https://raw.githubusercontent.com/aaitelmouden/DATA607S2020/master/Week1/recent-grads.csv")
+
+```
+
+*Obtain the first several rows : Let’s view the dataset before we start transforming it:*
+```{r}
+head(CollegeMajors)
+# Retrieve the dimension of the Data.
+dim(CollegeMajors)
+```
+
+```{r}
+# Column Names in Our Data Frame: names column names are meaningful, so no replacment is needed. instead headers for recent-grads.csv are shown below:
+```
+
+
+| Header               | Description                                                                |
+|----------------------|----------------------------------------------------------------------------|
+| Major_code           | Rank by median earnings                                                    |
+| Rank                 | Major code, FO1DP in ACS PUMS                                              |
+| Major                | Major description                                                          |
+| Major_category       | Category of major from Carnevale et al                                     |
+| Total                | Total number of people with major                                          |
+| Sample_size          | Sample size (unweighted) of full-time, year-round ONLY (used for earnings) |
+| Men                  | Male graduates                                                             |
+| Women                | Female graduates                                                           |
+| ShareWomen           | Women as share of total                                                    |
+| Employed             | Number employed (ESR == 1 or 2)                                            |
+| Full_time            | Employed 35 hours or more                                                  |
+| Part_time            | Employed less than 35 hours                                                |
+| Full_time_year_round | Employed at least 50 weeks (WKW == 1) and at least 35 hours (WKHP >= 35)   |
+| Unemployed           | Number unemployed (ESR == 3)                                               |
+| Unemployment_rate    | Unemployed / (Unemployed + Employed)                                       |
+| Median               | Median earnings of full-time, year-round workers                           |
+| P25th                | 25th percentile of earnigns                                                |
+| P75th                | 75th percentile of earnings                                                |
+| College_jobs         | Number with job requiring a college degree                                 |
+| Non_college_jobs     | Number with job not requiring a college degree                             |
+| Low_wage_jobs        | Number in low-wage service jobs                                            |
+
+### Create a data frame with a subset of the columns in the dataset:
+
+```{r}
+MajorEmploy <- subset(CollegeMajors, select = c(Major, Employed, Unemployed, Median))
+
+head(MajorEmploy)
+```
+
+
+### Data Explorations & Graphics
+
+```{r}
+# We'll use the level function to have access to the available Majors.
+levels(CollegeMajors$Major)
+```
+### Salaries
+
+```{r}
+library(tidyverse)
+theme_set(theme_light())
+CollegeMajors %>% # pipe operation
+  ggplot(aes(Median)) + geom_histogram()
+```
+
+So as we can seen most major's make a little over 30K
+
+### Most common Majors
+
+```{r}
+CollegeMajors %>%
+  count(Major_category, wt = Total, sort = TRUE) %>%
+  ggplot(aes(Major_category, n)) + geom_col() + coord_flip() +
+labs(x = "",
+     y = "Total # of Graduates")
+```
+
+## Conclusion 
+
+R allows practicing a wide variety of statistical and graphical techniques. Using R I was able to explore dataset about college Majors, and after reading a little bit about tidyverse library, I was able to produced a handful of figures that I found pretty interesting. 
