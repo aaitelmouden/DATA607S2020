@@ -1,0 +1,76 @@
+---
+title: "DATA607 | Week2 Assignment"
+author: "Ait Elmouden Abdellah"
+date: "02/09/2020"
+output:
+  html_document:
+    df_print: paged
+---
+
+
+### Objective of the Assignment:
+
+SQL has limited numerical and statistical features. For these reasons, it
+may be desireable or even necessary to perform a statistical analysis in a
+statistical package rather than in the database. One way to do this, is to
+extract the data from the sql database and import it into R.   
+A movie review database will be created and used in this assignment. sql database can be hosted localy or in a cloud server. 
+
+
+### Data source 
+
+The movie review data are imaginary, names were randomly generated, and ratings were collected from imdb.com. three separte tables were created on the database: movie, reviewrs, rating.
+
+### Load the Required Package and connect to database
+
+```{r}
+library(RMySQL)
+mydb = dbConnect(MySQL(), user='root', password='msds2019', dbname='moviedb', host='localhost')
+dbListTables(mydb)
+```
+
+### Dipslay the database table "movie"
+
+```{r}
+moviestable <- dbSendQuery(mydb, "SELECT * FROM movie;")
+dbFetch(moviestable)
+```
+
+### Dipslay the database table "reviewer"
+
+```{r}
+reviewerstable <- dbSendQuery(mydb, "SELECT * FROM reviewer;")
+dbFetch(reviewerstable)
+```
+
+### Dipslay the database table "rating"
+
+```{r}
+ratingtable <- dbSendQuery(mydb, "SELECT * FROM rating;")
+dbFetch(ratingtable)
+```
+
+### Run an SQL query:
+
+Now let's run an sql query to find the reviewer's name and the title of the movie for those reviewers who rated more than one movies. we'll use dbSendQuery() to submit the query use, and fetch() to fetch the data from the query.
+
+```{r}
+
+revRatedmore <- dbSendQuery(mydb, " SELECT rev_name, mov_title 
+                       FROM reviewer, movie, rating, rating r2 
+                       WHERE rating.mov_id=movie.mov_id 
+                       AND reviewer.rev_id=rating.rev_ID 
+                       AND rating.rev_id = r2.rev_id 
+                       GROUP BY rev_name, mov_title HAVING count(*) > 1;")
+
+query <- fetch(revRatedmore, n = -1)
+show(query)
+
+```
+
+### Disconnect from database
+
+```{r}
+dbDisconnect(mydb)
+```
+
