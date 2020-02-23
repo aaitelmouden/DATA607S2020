@@ -200,7 +200,7 @@ head(ChessResults, 5)
 write.csv(ChessResults, file = "ChessResults.csv")
 ```
 
-[Uplease the file to Github](https://github.com/aaitelmouden/DATA607/blob/master/ChessResults.csv)
+[Upload the file to Github](https://github.com/aaitelmouden/DATA607S2020/blob/master/project1/ChessResults.csv)
 
 ### References ###
 
