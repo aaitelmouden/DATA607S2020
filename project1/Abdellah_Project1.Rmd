@@ -103,7 +103,7 @@ USCFID
 ```{r}
 PlayerID <- str_extract(string = Combinedata, pattern = "[\\s{3}]\\d{1,2}[\\s\\|]")
 PlayerID <- str_trim(PlayerID)
-PlayerID
+head(PlayerID)
 ```
 
 **Extract player Names**
@@ -111,21 +111,21 @@ PlayerID
 ```{r}
 Name <- str_extract(string = Combinedata, pattern = "(\\w+\\s){2,5}")
 Name <- str_trim(Name)
-Name
+head(Name)
 ```
 
 **Extract Player States**
 
 ```{r}
 State <- str_extract(string = PlayerIDNoHeader, pattern = "[[:alpha:]]{2}")
-State
+head(State)
 ```
 
 **Extract the Total Number of Points**
 
 ```{r}
 NbrPoints <- str_extract(string = Combinedata, pattern = "[0-9]\\.[0-9]")
-NbrPoints
+head(NbrPoints)
 ```
 
 **Extract the Player’s Pre-Rating**
@@ -133,7 +133,7 @@ NbrPoints
 ```{r}
 PreRating <- str_extract(string = Combinedata, pattern = "\\s\\d{3,4}[^\\d]")
 PreRating <- as.integer(str_extract(PreRating, "\\d+")) #Remove all the “P’s” at the end of the ratings
-PreRating
+head(PreRating)
 ```
 
 ### Calculate Average Pre Chess Rating of Opponents
@@ -145,7 +145,7 @@ PreRating
 ```{r}
 opponentData <- unlist(str_extract_all(PlayerNameNoHeader, "([\\|][A-Z]([[:space:]]+)\\d*[\\|])([A-Z]([[:space:]]+)\\d*[\\|])*", simplify=TRUE))
 opponents <- matrix(ncol=7)
-opponentData
+head(opponentData)
 ```
 
 **Get the individual Opponent Indexes into a matrix of 7 columns**
@@ -200,7 +200,7 @@ head(ChessResults, 5)
 write.csv(ChessResults, file = "ChessResults.csv")
 ```
 
-[Upload the file to Github](https://github.com/aaitelmouden/DATA607S2020/blob/master/project1/ChessResults.csv)
+[Final CVS file in Github](https://github.com/aaitelmouden/DATA607S2020/blob/master/project1/ChessResults.csv)
 
 ### References ###
 
