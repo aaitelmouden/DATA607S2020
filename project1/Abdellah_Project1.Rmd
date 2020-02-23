@@ -1,0 +1,210 @@
+---
+title: "DATA607 | Project 1 "
+author: "Ait Elmouden Abdellah"
+date: "02/22/2020"
+output:
+  html_document:
+    df_print: paged
+---
+
+
+### Objective of the Assignment:
+
+The Objective of the this project is to processes and extract information from a text file that includes chess tournament results and create a R script that generates an .CSV file, after extracting the needed information.
+
+### Data source 
+
+The provided chess tournament results text file was uploaded to Github, and it will be loaded from there.
+
+### Load the raw Data from Github :
+
+Lets load the data from the text file as a character vector:
+
+```{r}
+tournamentdata <- readLines('https://raw.githubusercontent.com/aaitelmouden/DATA607S2020/master/project1/tournamentinfo.txt')
+```
+
+Lets Check the head of the data:
+
+```{r}
+head(tournamentdata, 16)
+```
+##Clean up the data##
+
+The stringr package provide a cohesive set of functions designed to make working with strings as easy as possible.
+
+```{r}
+library(stringr)
+```
+
+### Remove the dashes using sub function and Regex ###
+
+```{r}
+nodash <- sub("^-+$", "", tournamentdata) # This also can be done using str_replace_all function
+tail(nodash)
+```
+
+### Clean the empty rows ###
+
+
+```{r}
+noblanklines <- nodash[sapply(nodash, nchar) > 0]
+head(noblanklines)
+```
+
+### Generate regular sequences to create separate vector tables ###
+
+**Players Names Table**
+
+```{r}
+PlayerName <- noblanklines[seq(1, 130, 2)]
+head(PlayerName)  
+```
+
+**Players ID's Table**
+
+** Same function will be used to extract the player ID)
+
+```{r}
+PlayerID <- noblanklines[seq(2, 130, 2)]
+head(PlayerID)
+```
+
+**Remove header rows from PlayerName and PlayerID**
+
+```{r}
+PlayerNameNoHeader <- PlayerName[-c(1:1)]
+head(PlayerNameNoHeader)
+```
+
+```{r}
+PlayerIDNoHeader <- PlayerID[-c(1:1)]
+head(PlayerIDNoHeader)
+```
+
+**make all the data about one player combined in one row**
+
+```{r}
+Combinedata <- mapply(paste, sep = "", PlayerNameNoHeader, PlayerIDNoHeader)
+head(Combinedata)
+```
+
+###  Extract the relevant information from the txt data using regular expressions 
+
+**Extract USCFID**
+
+```{r}
+USCFID <- str_extract(string = Combinedata, pattern = "[0-9]{8}")
+USCFID
+```
+
+**Extract Player ID**
+
+```{r}
+PlayerID <- str_extract(string = Combinedata, pattern = "[\\s{3}]\\d{1,2}[\\s\\|]")
+PlayerID <- str_trim(PlayerID)
+PlayerID
+```
+
+**Extract player Names**
+
+```{r}
+Name <- str_extract(string = Combinedata, pattern = "(\\w+\\s){2,5}")
+Name <- str_trim(Name)
+Name
+```
+
+**Extract Player States**
+
+```{r}
+State <- str_extract(string = PlayerIDNoHeader, pattern = "[[:alpha:]]{2}")
+State
+```
+
+**Extract the Total Number of Points**
+
+```{r}
+NbrPoints <- str_extract(string = Combinedata, pattern = "[0-9]\\.[0-9]")
+NbrPoints
+```
+
+**Extract the Player’s Pre-Rating**
+
+```{r}
+PreRating <- str_extract(string = Combinedata, pattern = "\\s\\d{3,4}[^\\d]")
+PreRating <- as.integer(str_extract(PreRating, "\\d+")) #Remove all the “P’s” at the end of the ratings
+PreRating
+```
+
+### Calculate Average Pre Chess Rating of Opponents
+
+
+*In this step we'll extract the Opponents data by Player ID*
+
+
+```{r}
+opponentData <- unlist(str_extract_all(PlayerNameNoHeader, "([\\|][A-Z]([[:space:]]+)\\d*[\\|])([A-Z]([[:space:]]+)\\d*[\\|])*", simplify=TRUE))
+opponents <- matrix(ncol=7)
+opponentData
+```
+
+**Get the individual Opponent Indexes into a matrix of 7 columns**
+
+```{r}
+opponents <- unlist(str_extract_all(opponentData[,], "\\d+", simplify=TRUE))
+head(opponents)
+```
+
+**In this step we'll Loop through each row of Opponent Index. Match each Opponent Index with its corresponding Pre-Rating. Get the average Opponent rating for each row**
+
+```{r}
+RatingAverages = NULL #initialize teh rating averages 
+
+for(row in 1:nrow(opponents)){
+  numberOfgames = 0
+  sum = 0
+  
+  for(col in 1:ncol(opponents)){
+    
+    if(opponents[row, col] != ""){ # Check to make sure we are not looking at a null opponent index value
+      Oppindex <- opponents[row, col] # Get the Opponent Index
+      Oppindex <- strtoi(Oppindex, base=0L) # Convert to integer
+      sum = sum + strtoi(PreRating[Oppindex]) # Update sum of corresponding pre-ratings
+      numberOfgames = numberOfgames + 1 # Update number of opponents
+    }
+  }
+  
+  avgerage = sum/numberOfgames
+  RatingAverages = round(rbind(RatingAverages, data.frame(avgerage)),digits = 0)
+}
+head(RatingAverages)
+```
+
+## Create a data frame with the relevant information
+
+```{r}
+ChessResults <- data.frame(PlayerID, Name, State, NbrPoints, PreRating, RatingAverages)
+head(ChessResults, 5)
+```
+
+**Change the column names**
+
+```{r}
+colnames(ChessResults) <- c("PlayerID","Player's Name", "State", "Total Number of Points", "Pre-Rating", "Average Rating of Opponents")
+head(ChessResults, 5)
+```
+
+## Generates a .CSV file
+
+```{r}
+write.csv(ChessResults, file = "ChessResults.csv")
+```
+
+[Uplease the file to Github](https://github.com/aaitelmouden/DATA607/blob/master/ChessResults.csv)
+
+### References ###
+
+"Handling and Processing Strings in R", [Gaston Sanchez](https://www.gastonsanchez.com/)
+http://www.datasciencemadesimple.com/seq-function-in-r/
+https://stackoverflow.com/questions/37901142/paste-multiple-rows-together-in-r
+Wickham, H. (2017). R: [Package stringr. Retrieved February 12, 2019, from]( https://cran.r-project.org/web/packages/stringr/stringr.pdf)
