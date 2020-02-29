@@ -1,7 +1,7 @@
 ---
-title: "DATA607 | Project 1 "
+title: "DATA607 | Week 5"
 author: "Ait Elmouden Abdellah"
-date: "02/22/2020"
+date: "02/29/2020"
 output:
   html_document:
     df_print: paged
@@ -10,11 +10,20 @@ output:
 
 ### Objective of the Assignment:
 
-The Objective of the this project is to processes and extract information from a text file that includes chess tournament results and create a R script that generates an .CSV file, after extracting the needed information.
+The goal of this assignment is to use R to tidy (reshape) data, using "base R" functionality and Hadley Wickham's tidyr and dplyr packages. 
+The folowing data that was used in this assignment describes arrival delays for two airlines across five destinations. 
 
-### Data source 
+|         |         | Los.Angeles | Phoenix | San.Diego | San.Franciso | Seattle |
+|---------|---------|-------------|---------|-----------|--------------|---------|
+| ALASKA  | On time | 497         | 221     | 212       | 503          | 1841    |
+|         | Delayed | 62          | 12      | 20        | 102          | 305     |
+|         |         |             |         |           |              |         |
+| AM WEST | On Time | 694         | 4840    | 383       | 320          | 201     |
+|         | Delayed | 117         | 415     | 65        | 129          | 61      |
 
-The provided chess tournament results text file was uploaded to Github, and it will be loaded from there.
+
+*Data Source : Numbersense, Kaiser Fung, McGraw Hill, 2013*
+
 
 ### Load the raw Data from Github :
 
@@ -204,7 +213,7 @@ write.csv(ChessResults, file = "ChessResults.csv")
 
 ### References ###
 
-"Handling and Processing Strings in R", [Gaston Sanchez](https://www.gastonsanchez.com/)
-http://www.datasciencemadesimple.com/seq-function-in-r/
-https://stackoverflow.com/questions/37901142/paste-multiple-rows-together-in-r
-Wickham, H. (2017). R: [Package stringr. Retrieved February 12, 2019, from]( https://cran.r-project.org/web/packages/stringr/stringr.pdf)
+1. "Handling and Processing Strings in R", [Gaston Sanchez](https://www.gastonsanchez.com/)
+2. http://www.datasciencemadesimple.com/seq-function-in-r/
+3. https://stackoverflow.com/questions/37901142/paste-multiple-rows-together-in-r
+4. Wickham, H. (2017). R: [Package stringr. Retrieved February 12, 2019, from]( https://cran.r-project.org/web/packages/stringr/stringr.pdf)
