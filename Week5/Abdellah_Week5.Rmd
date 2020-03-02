@@ -8,7 +8,7 @@ output:
 ---
 
 
-### Objective of the Assignment:
+## Objective of the Assignment:
 
 The goal of this assignment is to use R to tidy (reshape) data, using "base R" functionality and Hadley Wickham's tidyr and dplyr packages. 
 The folowing data that was used in this assignment describes arrival delays for two airlines across five destinations. 
@@ -24,21 +24,92 @@ The folowing data that was used in this assignment describes arrival delays for 
 
 *Data Source : Numbersense, Kaiser Fung, McGraw Hill, 2013*
 
-### Load the required Libraries 
+## Load the required Libraries 
 
 ```{r}
 library("tidyr")
 library("dplyr")
+library(stringr)
 ```
 
-We will load the data from csv file hosted in github:
+We will load the data from a csv file hosted in github:
 
 ```{r}
-airlines <- read.csv("Link")
+airlines <- read.csv("https://raw.githubusercontent.com/aaitelmouden/DATA607S2020/master/Week5/airlines.csv", stringsAsFactors=FALSE, sep = ',')
+head(airlines)
 ```
 
-Lets Check the head of the data:
+**Let's change the names of X, X.1 to something meaningful**
 
 ```{r}
-head(tournamentdata, 16)
+airlinesDF <- airlines %>% rename(airline = X, status = X.1, los_angeles = Los.Angeles, phoenix = Phoenix, san_diego = San.Diego, san_franciso = San.Franciso, seattle = Seattle)
+
+#Add missing values
+airlinesDF[2, "airline"] <- "ALASKA"
+airlinesDF[5, "airline"] <- "AM WEST"
+
+rownames(airlinesDF) <- NULL #reset our index
 ```
+
+
+## Data Wrangling with dplyr and tidyr
+
+### Converts data to tbl class. tbl’s are easier to examine than data frames. 
+
+```{r}
+dplyr::tbl_df(airlinesDF)
+```
+
+### Information dense summary of tbl data. 
+
+```{r}
+dplyr::glimpse(airlinesDF)
+```
+
+### Gather columns into rows and remove empty rows
+
+```{r}
+airlineGather <- tidyr::gather(airlinesDF, "Destinations","Flights", 3:7)
+airlineGather = airlineGather %>% na.omit()
+head(airlineGather)
+```
+
+**We can use filter() function to choose rows/cases where conditions are true. for example we can filter by Destinations**
+
+```{r}
+filter(airlineGather, Destinations == "phoenix")
+```
+
+Let’s compare the arrival delays, by calculating the total number of flights by each carrier (airlines) to different destinations.
+
+```{r}
+flightsSum <- airlineGather %>% group_by(airline) %>% 
+      summarize(flightsSum = sum(Flights))
+flightsSum
+```
+
+Let’s count the number of On time flights for each airline
+
+```{r}
+OntimeFlights <- airlineGather %>% group_by(airline) %>% 
+  filter(status == " Delayed ") %>% 
+  summarize(OntimeFlights = sum(Flights))
+OntimeFlights
+```
+
+For AM airlines which city had most number of Delays:
+
+```{r}
+AMWESTontime <- filter(airlineGather, status==" Delayed ")
+Ontime.rank <- AMWESTontime %>%
+                      arrange(desc(AMWESTontime$Flights))
+Ontime.rank
+```
+
+
+```{r}
+library(ggplot2)
+ggplot(data = AMWESTontime, aes(x = Destinations, y = Flights, fill = airline)) + geom_bar(stat="identity", position="dodge") + ggtitle("Comparing Delay by Destinations & Airline") + ylab("Delay flight Count")
+```
+
+**From the above graph, we can say that AMWEST has most delay rate across 5 cities as compared to Alaska.**
