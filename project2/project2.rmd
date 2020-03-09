@@ -1,0 +1,247 @@
+---
+title: "Project 2"
+author: "Abdellah, Ait Elmouden"
+date: "3/6/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Objective 
+
+The goal of this project is to use R tools to transform and prepare dataset for downstream analysis work. three datasets will be selected and used in this project.
+
+
+# Data I: National Agricultural Statistics Service Dataset
+
+Description : The data will be extracted using tabulizer library from the following [land values report](https://www.nass.usda.gov/Publications/Todays_Reports/reports/land0819.pdf) published in usda.gov website. 
+the report include several tables. we will extract the first table : Farm Real Estate Average Value per Acre –Regions, States, and UnitedStates:2015-2019.
+
+```{r}
+#Load all required packages
+library(tabulizer) # This package will be used to extract a table from the pdf report
+library(tidyr)
+library(hrbrthemes)
+library(dplyr)    
+library(ggplot2) 
+library(tidyverse)
+```
+
+### Extract the data from the USDA PDF file report.
+
+```{r}
+table1 <- extract_tables(
+  "https://www.nass.usda.gov/Publications/Todays_Reports/reports/land0819.pdf",
+  output = "data.frame",
+  pages = c(8, 9), # Specify the table location page 8, 9 
+  guess = TRUE )
+
+```
+
+### Let's clean the DATA
+
+```{r}
+
+table2_clean <- reduce(table1, bind_rows) %>% # bind elements of list to 1 df
+as_tibble() %>%
+filter(!(X %in% c("Region and State", ""))) %>%
+  
+rename(                             # Rename header
+    Region_and_State = X,
+    Year_2015 = X.1,
+    Year_2016 = X.2,
+    Year_2017 = X.3,
+    Year_2018 = X.4,
+    Year_2019 = X.5,
+    ) 
+table3_clean <- data.frame(lapply(table2_clean, function(x) gsub("\\s\\s[.]*", "", x))) # Remove the dotted lines 2 spaces after string
+table3_clean <- data.frame(lapply(table2_clean, function(x) gsub("\\s[.]*", " ", x))) # Remove the dotted lines 1 space after string
+landData <- data.frame(lapply(table3_clean, function(x) gsub(",", "", x))) %>%
+mutate_at(vars(Year_2015, Year_2016, Year_2017, Year_2018, Year_2019, Change), as.character) %>%
+mutate_at(vars(Year_2015, Year_2016, Year_2017, Year_2018, Year_2019, Change), as.numeric) %>%
+mutate_at(vars(Region_and_State), as.character)
+
+# an error will shows up "NAs introduced by coercion" because the change column include dash symbol for NA's
+```
+
+The data is ready lets save it as csv file, and practice some data wrangling with it.
+
+```{r}
+write.csv(landData, file = "landData.csv")
+```
+
+### Data wrangling and ploting
+
+1. Lets plot the Farm Real Estate Average Value per Acre in Utited State
+
+```{r}
+# Extarct United State Data
+LandUS <- filter(landData, landData$Region_and_State == "United States 2  ") 
+LandUS
+```
+
+```{r}
+# Guther Colomuns into rows and select the needed colomuns 
+LandGuther <- gather(LandUS, "Year", "Value_per_Acre", 2:6) %>%
+select(Year, Value_per_Acre)
+LandGuther
+```
+
+
+```{r}
+#Plot the Farm Real Estate Average Values per Acre in United States
+
+ggplot(LandGuther, aes(x=Year, y=Value_per_Acre, group =1)) +
+  geom_line(color="#69b3a2") + 
+  theme_ipsum()+
+  geom_point() + 
+  ggtitle("Farm Real Estate Average Value per Acre in United States 2015-2019")+
+  labs(y= "Dollars per acre", x = "Year")
+  
+```
+
+
+#### Extract Data by Region
+
+```{r}
+
+landByRegion <- filter(landData, Region_and_State == "Northeast  " | Region_and_State == "Lake States  " | Region_and_State == "Corn Belt  " | Region_and_State == "Northern Plains  " | Region_and_State == "Appalachian  " | Region_and_State == "Southeast  " | Region_and_State == "Delta States  " | Region_and_State =="Southern Plains  " | Region_and_State == "Mountain " | Region_and_State == "Pacific  ")
+landByRegion
+```
+
+```{r}
+ggplot(landByRegion, aes(x=Region_and_State, y=Change, fill=Change))+
+  geom_bar(colour="black", stat="identity")+
+  theme(axis.text.x = element_text(angle=65, vjust=0.6))+
+  ggtitle("Farm Real Estate Value per Acre % Change 2015-2019 by Region")+
+  labs(y= "% Change", x = "Region")
+```
+
+
+
+# Data II : Students performance in two tests in three terms 
+
+**Let's Imprort the data from the csv file**
+
+As we can see the data is untidy and following are the issues:
+
+1.  Multiple variables are stored in one column
+2. Variables are stored in both rows and columns
+3. Some column headers are values, not variable names
+4. Multiple types of observational units are stored in the same table
+
+
+```{r}
+StudentsPerfor <- read.csv("https://gist.githubusercontent.com/Kimmirikwa/b69d0ea134820ea52f8481991ffae93e/raw/4db7b1698035ee29885d10e1a59bd902716ae168/student_results.csv")
+StudentsPerfor
+```
+**1. Multiple variables are stored in one column**
+
+This data has data for both student and performance. The first thing I will do is to split these different observational units for each to have its own table. The columns id, name, phone and sex and age will be in the student table. test number, term 1, term 2 and term 3 will be in the performance table. id column will also be added to the performance table to identify the performance’s student.
+
+```{r}
+students_tbl <- select(StudentsPerfor, id, name, phone, sex.and.age)
+students_tbl
+```
+
+```{r}
+performance_tbl <- select(StudentsPerfor, id, test.number, term.1, term.2, term.3)
+performance_tbl
+```
+
+**2. Variables are stored in both rows and columns**
+
+The sex and age column in student_tbl has data for both sex and age. The sex and age for each student is extracted and added to the relevant column. 
+
+```{r}
+students_tbl2 <- separate(students_tbl, sex.and.age, c("Sex", "Age"), sep = "_")
+students_tbl2
+```
+**3. Some column headers are values, not variable names**
+
+term 1, term 2 and term 3 are values but are used as column headers. We'll make term 1, term 2 and term 3 columns in the term column and their previous values are in the marks column.
+
+```{r}
+performance_tbl2 <- gather(performance_tbl, "Term", "Marks", 3:5)
+performance_tbl2
+```
+
+**4. Multiple variables are stored in one column**
+
+test 1 and test 2 are different variables but are stored in test number column. test 1 and test 2 columns are added with their respective marks as. Also we'll the names from the sutdents table
+
+```{r}
+performance_tbl3 <- spread(performance_tbl2, test.number, Marks) %>%
+rename(
+   "test.1.marks" = "test 1",
+    "test.2.marks" = "test 2"
+) %>% 
+left_join(select(students_tbl, id, name), by = "id") %>%
+select(id, name, Term, test.1.marks, test.2.marks)
+performance_tbl3
+```
+
+**Calculate the average**
+
+Here we we'll cacluate a new variable (average), and select the Term column by terms
+
+```{r}
+mutate(performance_tbl3, average = (test.1.marks + test.2.marks)/2) %>%
+select(name, Term, average) %>%
+group_by(name)
+```
+
+
+### Data III : Coronona Virus data
+
+Load the data from the data source
+```{r}
+coronaDB <- read.csv("https://raw.githubusercontent.com/CryptoKass/ncov-data/master/world.latest.bno.csv")
+tbl_df(coronaDB)
+
+```
+
+As we can see from the data the 'notes' column  contained counts of individuals in critical, serious or recovered from the coronavirus. let's extract these infromation and put it in separate columns. we have 3 type of conditions (critical, serious, recovered) seprated by comma, so we can use the seprate() function to extract the information.
+
+```{r}
+corona_tbl <- separate(coronaDB, notes, c("condition1", "condition2", "condition3", NA), sep = ", ")
+
+head(corona_tbl)
+```
+
+Now that we have three new columns for the conditions type and the number of conditions, we'll need to separate the numbers from the health condition using space as a seprator. we'll call the new columns NC (# of critical), NR (# of recovered), NS (# of serious conditions) 
+
+
+```{r}
+corona_tbl2 <- separate(corona_tbl, condition1, c("NC", "condition1"), sep = "\\s") %>% # NC is the number of critical cases
+ separate(condition2, c("NR", "condition2"), sep = "\\s") %>% # NR is the number of Recovered cases
+separate(condition3, c("NS", "condition3", NA), sep = " ") # NS is the number of serious cases
+head(corona_tbl2)
+```
+Because the information in the notes column wasn't in the same order (critical, recovered, serious), we now have mixed data in our new conditions columns. we have to fix this. so we'll use the mutate() function to swipe these values, and put them in the right column.
+
+```{r}
+corona_tbl2 %>% mutate(condition1 = ifelse(condition1 == "recovered", condition2, condition1)) %>%
+mutate(condition1 = ifelse(condition1 == "serious", condition3, condition1)) %>%
+mutate(condition2 = ifelse(condition2 == "serious", condition3, condition2)) %>%
+mutate(condition3 = ifelse(condition3 == "recovered", "serious", condition2))
+```
+
+```{r}
+corona_tbl3 <- select(corona_tbl2, country, cases, deaths)
+head(corona_tbl3)
+```
+
+```{r}
+corona_tbl4 <- gather(corona_tbl3, "corona_data", "numbers", 2:3)
+head(corona_tbl4)
+```
+
+We wanted to create a stacked histogram using the transformed data, but there are several NA, and missing values.
+
+**Concluion**
+
+In this project i discovered the power of R, when handling and transforming data. by using small codes i was able to perform some complex data transformations, that may need long coding with other tools like panda in python.
+
