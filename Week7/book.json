@@ -1,6 +1,6 @@
 [{
         "title": "The China Study",
-	"category": "Nutrition"
+	"category": "Nutrition",
         "authors": "Thomas Campbell; T. Colin Campbell",
         "publisher": "BenBella Books",
         "published date": "May 2006",
@@ -8,7 +8,7 @@
     },
     {
         "title": "The 7 Habits of Highly Effective People",
-	"category": "Motivational"
+	"category": "Motivational",
         "authors": "Stephen R. Covey",
         "publisher": "Free Press",
         "published date": "November 2004",
@@ -16,7 +16,7 @@
     },
     {
         "title": "The Linux Programming Interface",
-	"category": "Computers"
+	"category": "Computers",
         "authors": "Michael Kerrisk",
         "publisher": "No Starch Press",
         "published date": "October 2019",
