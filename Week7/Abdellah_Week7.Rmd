@@ -14,15 +14,73 @@ The goal of this assignment is to manipulate Less-structured data from the web. 
 ## Load the required Libraries 
 
 ```{r}
-library(stringr)
 library(XML) #for xml processing
-library(RCurl)
 library(rvest)  # to scrape (or harvest) data from html web pages
-library(dplyr)
 library(jsonlite) # for json files processing
 library("kableExtra") # Construct Complex Table with 'kable' and Pipe Syntax
 
 ```
 
 
+## HTML file Manupulation
 
+```{r}
+htmlfile <- "https://raw.githubusercontent.com/aaitelmouden/DATA607S2020/master/Week7/book.html"
+
+htmlTable <- read_html(htmlfile)
+htmlBooks <- htmlTable %>%
+  html_nodes("table") %>%  # Select nodes from THE HTML document
+  .[[1]] %>%
+  html_table(fill = NA) # converts data to an R data frame automatically
+
+colnames(htmlBooks) <- c("Category","Title", "Authros", "Publisher","Published Date", "ISBN")
+
+htmlBooks  %>%
+  kable() %>%
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed")) %>%
+  scroll_box(width = "100%", height = "200px")
+
+```
+
+## XML file Manupulation
+
+```{r}
+xmlfile <- "https://raw.githubusercontent.com/aaitelmouden/DATA607S2020/master/Week7/book.xml"
+ 
+xmlData <- read_xml(xmlfile)
+Books <- xml_children(xmlData)
+
+xmlBooks <- c()
+for (i in 1:length(Books)){
+  xmlBooks <- rbind(xmlBooks,xml_text(xml_children(Books[i])))
+}
+
+xmlBooks <- data.frame(xmlBooks)
+
+colnames(xmlBooks) <- xml_name(xml_children(Books[1]))
+
+xmlBooks  %>% 
+  kable() %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed")) %>%
+  scroll_box(width = "100%", height = "200px")
+
+
+```
+
+## JSON Manupulation
+
+```{r}
+jsonfile <- "https://raw.githubusercontent.com/aaitelmouden/DATA607S2020/master/Week7/book.json"
+
+jsonBooks <- fromJSON(jsonfile) #converts any json object to an R data frame.
+
+jsonBooks  %>% 
+  kable() %>% 
+  kable_styling(bootstrap_options = c("striped", "hover", "condensed")) %>%
+  scroll_box(width = "100%", height = "200px")
+
+```
+
+## Conclusion
+
+While all 3 files html, xml and json have different structures , We were able to get the same resulting dataframes As we can see.
