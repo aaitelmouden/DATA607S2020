@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<books>
+   <book id="b1">
+     <title>The China Study</title>
+     <category>Nutrition</category>
+      <authors>Thomas Campbell; T. Colin Campbell</authors>
+      <publisher>BenBella Books</publisher>        
+      <published_date>May 2006</published_date>
+      <isbn-10>1932100660</isbn-10>
+   </book> 
+   <book id="b2">
+     <title>The 7 Habits of Highly Effective People</title>
+     <category>Motivational</category>
+      <authors>Stephen R. Covey</authors>
+      <publisher>Free Press</publisher>        
+      <published_date>November 2004</published_date>
+      <isbn-10>0743269519</isbn-10>
+   </book>
+   <book id="b3">
+     <title>The Linux Programming Interface</title>
+     <category>Computers</category>
+      <authors>Michael Kerrisk</authors>
+      <publisher>Apress</publisher>        
+      <published_date>October 2019</published_date>
+      <isbn-10>1593272200</isbn-10>
+   </book> 
+</books>

@@ -1,0 +1,28 @@
+---
+title: "DATA607 | Week 7"
+author: "Ait Elmouden Abdellah"
+date: "03/13/2020"
+output:
+  html_document:
+    df_print: paged
+---
+
+
+## Objective of the Assignment:
+The goal of this assignment is to manipulate Less-structured data from the web. We'll focus on the standard formats for web data:  HTML, XML, and JSON.  Three books were selected and information were stored in three files HTML, XML and JASON, from where data will be loaded.
+
+## Load the required Libraries 
+
+```{r}
+library(stringr)
+library(XML) #for xml processing
+library(RCurl)
+library(rvest)  # to scrape (or harvest) data from html web pages
+library(dplyr)
+library(jsonlite) # for json files processing
+library("kableExtra") # Construct Complex Table with 'kable' and Pipe Syntax
+
+```
+
+
+
