@@ -1,0 +1,112 @@
+---
+title: "project 3"
+author: "Ait elmouden"
+date: "3/18/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Project Team : DeepfriedData
+
+- Abdellah, Ait Elmouden
+- Boonie Cooper
+- David Most
+- Gehad Gad
+
+# Goal of the project:
+
+when one is working in the field of Data Science it is difficult to know exactly the boundaries between a Data Scientist, a Data Analyst, or a Data Engineer we will be attempting to clarify what it takes to become a Data Scientist by developing a webscraper for Indeed job postings.
+
+In this project, we web scraped Indeed Jobs with R using rvest package to get the relevant information from Indeed’s job posintg to answer the following question: **What are the most valued data science skills?**
+
+We collaborated as a team to understand the question, get the data, clean it, analyze it, and draw conclusions. We used Slack, GitHub, and Zoom online meetings to work together.
+
+**Process :**
+
+
+1. We looked for Data Scientist jobs in a specific location (eg. New York City)
+2. Get job titles from Indeed’s website.
+3. scrape all summary descriptions for each job.
+4. Building an entire scraper by putting all parts together.
+
+
+**Libraries**
+
+```{r}
+library(tidyverse)
+library(rvest)
+library(xml2)
+
+```
+
+## Get Indeed’s Data Into R
+
+After looking for a data scientist job in specific location (in this case New York, NY), we we copied the link address and stored the URL in a variable called url. Then we used the xml2 package and the read_html function to parse the page. In short, this means that the function will read in the code from the webpage and break it down into different elements (<div>, <span>, <p>, etc.) for you to analyse it.
+
+```{r}
+url <- "https://www.indeed.com/jobs?as_and=data+scientist&as_phr=&as_any=&as_not=&as_ttl=&as_cmp=&jt=all&st=&as_src=&salary=&radius=25&l=New+York%2C+NY&fromage=any&limit=50&sort=&psf=advsrch&from=advancedsearch"
+page <- read_html(url)
+```
+
+## Inspecting Indeed’s Webpage For Scraping
+
+### Let's Get the  Job Title
+
+By inspecting the code in the Indeed website using Inspect element tool we see that the The job title is located under the anchor tag. If we look more into it we can also see the it is located under the jobtitle CSS selector . 
+
+```{r}
+JobTitle <- page %>% 
+rvest::html_nodes('[data-tn-element="jobTitle"]') %>%
+rvest::html_attr("title")
+head(JobTitle)
+```
+
+### Get the company Names
+
+We can see that company name are located in the <span> element with a class attribute value of location and company respectively. We can exact information just with the corresponding CSS selectors.
+
+```{r}
+company_name <- page %>% 
+  rvest::html_nodes(".company") %>%
+  rvest::html_text() %>%
+  stringi::stri_trim_both()
+head(company_name)
+```
+
+```{r}
+job_link <- page %>% 
+  rvest::html_nodes('[data-tn-element="jobTitle"]') %>%
+  rvest::html_attr("href")
+head(job_link)
+```
+
+
+
+### Job Description
+
+```{r}
+job_description <- c()
+  for(i in seq_along(links)) {
+    
+    url <- paste0("https://www.indeed.com/", links[i])
+    page <- xml2::read_html(url)
+    
+    job_description[[i]] <- page %>%
+        rvest::html_nodes('.jobsearch-JobComponent-description icl-u-xs-mt--md') %>% 
+        rvest::html_text() %>%
+        stringi::stri_trim_both()
+  }
+typeof(job_description)
+```
+### Combine the data in data frame
+
+```{r}
+df <- data.frame(job_title, company_name, job_description)
+  full_df <- rbind(full_df, df)
+```
+
+```
+
