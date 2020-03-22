@@ -1,0 +1,182 @@
+---
+title: "project 3"
+date: "3/18/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Project Team : DeepfriedData
+
+- Abdellah, Ait Elmouden
+- Boonie Cooper
+- David Most
+- Gehad Gad
+
+# Goal of the project:
+
+when one is working in the field of Data Science it is difficult to know exactly the boundaries between a Data Scientist, a Data Analyst, or a Data Engineer we will be attempting to clarify what it takes to become a Data Scientist by developing a webscraper for Indeed job postings.
+
+In this project, we web scraped Indeed Jobs with R using rvest package to get the relevant information from Indeed’s job posintg to answer the following question: **What are the most valued data science skills?**
+
+We collaborated as a team to understand the question, get the data, clean it, analyze it, and draw conclusions. We used Slack, GitHub, and Zoom online meetings to work together.
+
+**Process :**
+
+
+1. We searched for Data Scientist jobs in a specific location (eg. New York City)
+2. Get job titles from Indeed’s website.
+3. scrape all summary descriptions for each job.
+4. Building an entire scraper by putting all parts together.
+5. count data science keywords occurence 
+
+
+**Libraries**
+
+```{r}
+library(tidyverse)
+library(rvest)
+library(xml2)
+library(stringi)
+library(dplyr)
+```
+
+
+```{r}
+#data <- read.csv("/home/taha/DataScience/DATA607/Spring2020/DATA607/project3up/data_science_2018.csv")
+#head(data)
+```
+
+
+## Get Indeed’s Data Into R
+
+After looking for a data scientist job in specific location (in this case New York, NY), we we copied the link address and stored the URL in a variable called url. Then we used the xml2 package and the read_html function to parse the page. In short, this means that the function will read in the code from the webpage and break it down into different elements (<div>, <span>, <p>, etc.) for you to analyse it.
+
+```{r}
+url <- "https://www.indeed.com/jobs?as_and=data+scientist&as_phr=&as_any=&as_not=&as_ttl=&as_cmp=&jt=all&st=&as_src=&salary=&radius=25&l=New+York%2C+NY&fromage=any&limit=50&sort=&psf=advsrch&from=advancedsearch"
+page <- read_html(url)
+```
+
+## Inspecting Indeed’s Webpage For Scraping
+
+The Objective is to create a data frame that include the job titles and the job description 
+
+### The Job Titles
+
+By inspecting the code in the Indeed website using Inspect element tool we see that the The job title is located under the anchor tag. If we look more into it we can also see the it is located under the **jobtitle** CSS selector . 
+
+### Job Descriptions
+
+You’ll notice, that on the current page, there is just a little short description of the job summary. However, we want to get the full description of how many years of experience we need, what skill set is required, and what responsibilities the job entails.
+
+In order to do that we have to collect the links on the website. After that we can locate where the job description is located in the document. after inspecting the full description we noticed that the job description is in a <span> element with a class attribute values **.jobsearch-JobComponent-description**. 
+
+Also we'll need to our scraper to include the part the will scrape multiple page results. since the only thing that change in the url when moving from page to another is the number or results, so can scrape multiple pages by messing with this number.
+
+
+### Putting all the Pieces Together and build our scraper
+
+```{r}
+# We changed the number of results per page from 10 to 50 results per page 
+
+first_page <- 50 # first page of result 
+last_page <-  500 # last page of results
+results <- seq(from = first_page, to = last_page, by = 50)
+
+full_df <- data.frame()
+for(i in seq_along(results)) {
+  
+  first_page_url <- "https://www.indeed.com/jobs?as_and=data+scientist&as_phr=&as_any=&as_not=&as_ttl=&as_cmp=&jt=all&st=&as_src=&salary=&radius=25&l=New+York%2C+NY&fromage=any&limit=50&sort=&psf=advsrch&from=advancedsearch"
+  url <- paste0(first_page_url, "&start=", results[i])
+  page <- xml2::read_html(url) 
+  
+Sys.sleep(3) # to avoids error messages such as "Error in open.connect
+
+##Job Title
+
+JobTitle <- page %>% 
+rvest::html_nodes('[data-tn-element="jobTitle"]') %>%
+rvest::html_attr("title")
+
+## Job Link
+links <- page %>% 
+  rvest::html_nodes('[data-tn-element="jobTitle"]') %>%
+  rvest::html_attr("href")
+
+
+## Job Description
+job_description <- c()
+  for(i in seq_along(links)) {
+    
+    url <- paste0("https://www.indeed.com/", links[i])
+    page <- xml2::read_html(url)
+    
+job_description[[i]] <- page %>%
+  html_nodes('.jobsearch-JobComponent-description') %>% 
+  html_text() %>%
+  stri_trim_both()
+  }
+}
+
+df <- data.frame(JobTitle, job_description)
+  full_df <- rbind(full_df, df) %>% 
+    
+mutate_at(vars(JobTitle, job_description), as.character)
+
+#full_df_count <- str_count(full_df$job_description, "SQL" )
+
+head(full_df)
+```
+
+
+```{r}
+# In this part I'll search and count some words related to data science using mutate and str_count
+
+skills <- full_df %>%
+mutate(mathematics = str_count(full_df$job_description, "mathematics" )) %>%
+mutate(SQL = str_count(full_df$job_description, "SQL" )) %>%
+mutate(Python = str_count(full_df$job_description, "python" )) %>%
+mutate(programming = str_count(full_df$job_description, "programming" )) %>%
+mutate(analysis = str_count(full_df$job_description, "analysis" )) %>%
+mutate(statistics = str_count(full_df$job_description, "satatistics" )) %>%
+mutate(mathematics = str_count(full_df$job_description, "mathematics" )) %>%
+mutate(modeling = str_count(full_df$job_description, "modeling" )) %>%
+mutate(communication = str_count(full_df$job_description, "communication" )) %>%
+mutate(solving = str_count(full_df$job_description, "solving" )) %>%
+mutate(perl = str_count(full_df$job_description, "perl" )) %>%
+mutate(learning = str_count(full_df$job_description, "learning" )) %>%
+mutate(computer_science = str_count(full_df$job_description, "computer science" )) %>%
+mutate(TensorFlow = str_count(full_df$job_description, "TensorFlow" )) %>%  
+mutate(panda = str_count(full_df$job_description, "panda" )) %>% 
+mutate(R = str_count(full_df$job_description, "R" )) %>%
+select(3:17) %>% summarise_all(funs(sum))
+head(skills)
+```
+
+```{r}
+table <- gather(skills, "skill", "Count", 1:15)
+write.csv(table,'data_skills.csv')
+table
+```
+
+
+```{r}
+p7 <- ggplot(data=table, aes(x=Count, y=skill))+
+  geom_bar(stat="identity") +
+        theme(axis.line = element_line(size=1, colour = "black"),
+              panel.grid.major = element_blank(),
+              panel.grid.minor = element_blank(),
+              panel.border = element_blank(),
+              panel.background = element_blank(),
+              plot.title=element_text(size = 20, family="xkcd-Regular"),
+              text=element_text(size = 16, family="xkcd-Regular"),
+              axis.text.x=element_text(colour="black", size = 12),
+              axis.text.y=element_text(colour="black", size = 12))
+p7
+```
+
+
+```
+
