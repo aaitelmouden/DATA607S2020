@@ -1,0 +1,10 @@
+name: Publish Document
+title:
+username:
+account: rpubs
+server: rpubs.com
+hostUrl: rpubs.com
+appId: https://api.rpubs.com/api/v1/document/591818/44ef5d0affa64c5e920c9afde175d809
+bundleId: https://api.rpubs.com/api/v1/document/591818/44ef5d0affa64c5e920c9afde175d809
+url: http://rpubs.com/aaitelmouden/591818/edit
+when: 1585536495.78245
