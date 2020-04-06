@@ -1,0 +1,168 @@
+---
+title: "Assignment 11 | Sentiment Analysis"
+author: "Abdellah, Ait elmouden"
+date: "4/5/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### Introduction 
+
+Sentiment analysis is a type of text mining which aims to determine the opinion and subjectivity of its content. in [Text Mining with R, Chapter 2](https://www.tidytextmining.com/sentiment.html#the-sentiments-dataset) Book the author provide some example code how to perfrom a sentiment analysis using tidytext, tidyr and dplyr packages. the goal of this assignment is to explore these examples, and extend one the codes provided.
+
+### Libraries 
+
+tidytext() package is used for text mining for word processing and sentiment analysis using 'dplyr', 'ggplot2', and other tidy tools.
+```{r}
+library(textdata)
+library(tidytext)
+library(tidyr)
+```
+
+The tidytext package provides access to several sentiment lexicons Let's check some of the lexicons using get_sentiment get_sentiments function.
+
+```{r}
+get_sentiments("afinn")
+```
+
+There are two other lexicon The **bing** lexicon that categorizes words in a binary fashion into positive and negative categories. The **AFINN** lexicon assigns words with a score that runs between -5 and 5, with negative scores indicating negative sentiment and positive scores indicating positive sentiment.
+
+### Tidy format data 
+
+A first step before doing a sentiment analysis, is to prepare the data in tidy format. the data text was taken from Jane Austen's novel loaded using the janeaustenr package, than converted to the tidy format using unnest_tokens()
+
+```{r}
+library(janeaustenr)
+library(dplyr)
+library(stringr)
+
+tidy_books <- austen_books() %>%
+  group_by(book) %>%
+  mutate(linenumber = row_number(),
+         chapter = cumsum(str_detect(text, regex("^chapter [\\divxlc]", 
+                                                 ignore_case = TRUE)))) %>%
+  ungroup() %>%
+  unnest_tokens(word, text)
+head(tidy_books)
+```
+
+### Sentiment analysis
+
+Now that the text is in a tidy format, the sentiment analysis can be performed.
+
+```{r}
+# Count the most common joy words in Emma? 
+nrc_joy <- get_sentiments("nrc") %>% 
+  filter(sentiment == "joy")
+
+tidy_books %>%
+  filter(book == "Emma") %>%
+  inner_join(nrc_joy) %>%
+  count(word, sort = TRUE)
+```
+
+Examine how sentiment changes throughout each novel, and count how many positive and negative words
+
+```{r}
+jane_austen_sentiment <- tidy_books %>%
+  inner_join(get_sentiments("bing")) %>%
+  count(book, index = linenumber %/% 80, sentiment) %>%
+  spread(sentiment, n, fill = 0) %>%
+  mutate(sentiment = positive - negative)
+head(jane_austen_sentiment)
+```
+
+```{r}
+library(ggplot2)
+
+ggplot(jane_austen_sentiment, aes(index, sentiment, fill = book)) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~book, ncol = 2, scales = "free_x")
+```
+
+### Sentiment Analysis using Bing Lexicon
+
+In this examples We'll use we will use the book Sense and Sensibility and derive its words to implement out sentiment analysis model.
+
+#### Format the data
+
+```{r}
+tidyData <- austen_books() %>%
+ group_by(book) %>%
+ mutate(linenumber = row_number(),
+   chapter = cumsum(str_detect(text, regex("^chapter [\\divxlc]", 
+                          ignore_case = TRUE)))) %>%
+ungroup() %>%
+unnest_tokens(word, text)
+```
+
+#### Count the words
+
+```{r}
+    positive_senti <- get_sentiments("bing") %>%
+     filter(sentiment == "positive")
+    tidyData %>%
+     filter(book == "Emma") %>%
+     semi_join(positive_senti) %>%
+     count(word, sort = TRUE)
+  
+```
+
+#### Segregate our data into separate columns of positive and negative sentiments.
+
+```{r}
+    library(tidyr)
+    bing <- get_sentiments("bing")
+    Emma_sentiment <- tidyData %>%
+     inner_join(bing) %>%
+     count(book = "Emma" , index = linenumber %/% 80, sentiment) %>%
+     spread(sentiment, n, fill = 0) %>%
+     mutate(sentiment = positive - negative)
+    
+    head(bing)
+```
+
+#### Count positive and negative words
+
+Let us now proceed towards counting the most common positive and negative words that are present in the novel.
+
+```{r}
+    counting_words <- tidyData %>%
+     inner_join(bing) %>%
+     count(word, sentiment, sort = TRUE)
+    head(counting_words)
+```
+we will perform visualization of our sentiment score. 
+
+```{r}
+    counting_words %>%
+     filter(n > 150) %>%
+     mutate(n = ifelse(sentiment == "negative", -n, n)) %>%
+     mutate(word = reorder(word, n)) %>%
+     ggplot(aes(word, n, fill = sentiment))+
+     geom_col() +
+     coord_flip() +
+     labs(y = "Sentiment Score")
+```
+
+#### Visualization
+
+In the final visualization, let us create a wordcloud that will delineate the most recurring positive and negative words.
+
+```{r}
+    library(reshape2)
+    library(wordcloud)
+    tidyData %>%
+     inner_join(bing) %>%
+     count(word, sentiment, sort = TRUE) %>%
+     acast(word ~ sentiment, value.var = "n", fill = 0) %>%
+     comparison.cloud(colors = c("red", "dark green"),
+              max.words = 100)
+```
+
+### Conclusion
+
+In this Assignment, we went through some examples of sentiment analysis from ext Mining with R. We learnt about the concept of sentiment analysis and implemented it over the dataset of Jane Austen’s books. We used a another lexical analyzer – ‘bing’. Furthermore, we also represented the sentiment score through a plot and also made a visual report of wordcloud.
