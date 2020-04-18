@@ -1,0 +1,62 @@
+---
+title: "Food Discovery with Uber Eats"
+author: "Ait Elmouden Abdellah"
+date: "4/18/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction 
+
+Even as [Uber Engineer](https://eng.uber.com/) improve Uber Eats to better understand eaters’ intentions when they use search, there are times when eaters just don’t know what they want to eat. In those situations, the Uber Eats app provides a personalized experience for each individual through restaurant recommendations.
+
+![uber](https://1fykyq3mdn5r21tpna3wkdyi-wpengine.netdna-ssl.com/wp-content/uploads/2018/09/Uber_Eats_Recommending_Feature_image-696x298.png)
+
+## Who are their target users?
+
+The Uber Eats marketplace consists of three sides: eaters, restaurant-partners, and delivery-partners. Eaters discover and order food through Uber-eath platform. Restaurant-partners use uber-eat platform as a sales channel to find customers. And delivery-partners earn income by picking up food from restaurants and delivering it to eaters. 
+
+## What are their key goals?
+
+Aid eaters in their decision-making process. help eaters discover a diverse array of restaurants and ensure that their restaurant-partners receive a fair amount of exposure in the app based on eater interest.
+
+
+![market](https://1fykyq3mdn5r21tpna3wkdyi-wpengine.netdna-ssl.com/wp-content/uploads/2018/09/Uber_Eats_Recommending_Figure_2-696x340.png)
+
+## Reverse engineering
+
+I new feature, discovered by [reverse engineering specialist Jane Manchun Wong](https://www.stitcher.com/podcast/cadence13/marketsnacks-daily/e/60951368?autoplay=true), would do away with the usual Uber Eats service fee. That's generally 15 percent of an order cost, so users could stand to save a fair whack if they're ordering Uber Eats on the reg. Uber is set to offer a monthly $9.99 pass that includes free delivery from any restaurant at any time. the Uber Eats Pass is a solid way to retain customers -- if you're already paying for a delivery service with them then you're less likely to order elsewhere. 
+
+## The Recommender system
+
+### Eaters
+
+The mission of Uber Eats is to “make eating well effortless at anytime, for anyone.provide eaters with an “effortless” experience for finding the right restaurant or dishes for their tastes.
+
+To tackle these challenges, developer spent a lot of effort on improving the relevance of the Uber Eats app. When an eater opens the Uber Eats app, intelligence on the backend determines how many restaurant carousels should be displayed; what kind of restaurant carousels should be presented to this eater; and how to rank the plain list of all restaurants in order to display restaurants the eater would like to order from at the top.
+
+Many different considerations play a part in what the app displays:
+
+
+- **How popular is the restaurant itself and what are the best features to determine popularity?** Do we rely on the rating, the historic total orders, or the most recent month’s total orders? The order/impression ratio?
+- **What are the most representative attributes of the restaurant?** Does the restaurant prepare and deliver food faster than others? What type of cuisines does it offer?
+- **Wat are the current contextual factors?** Is it breakfast time or dinner time? What are the current traffic conditions along the delivery path? Is it a weekday or a weekend?
+- **What attributes best describe the eater?** How many orders has the eater placed so far or in the last month? What kind of cuisines does the eater order most frequently? Is this person a new eater? Did this eater put any dishes into their shopping cart from the restaurant they just clicked into?
+- **What factors represents an eater’s preference for a particular restaurant?** Do we look at how often this eater has clicked into/ordered from this restaurant? Did the eater give this restaurant a high rating?
+- **What would like-minded eaters order?** How do we represent and find similar eaters? How about similar restaurants and dishes? How do we cold start new eaters in the context of collaborative filtering?
+
+To surface the most relevant restaurants to their eaters in the app, they need to determine how to best select and represent the above factors. Using this data requires a lot experimentation and iterations of different kinds of models, along with various feature engineering techniques.
+
+### Keeping eaters on our platform
+
+placing an order is only the beginning of customer journey. They also want to leverage their recommender system to make sure that eaters have a delightful delivery and dining experience. The model uses features from both the eater’s and restaurant’s past order experiences, such as food delivery time discrepancy, restaurant meal preparation time, and the eater’s rating on the order.
+
+For eaters, the system offers personalized restaurant recommendations, but ultimately eaters are looking for specific dishes to order. So, they are working on taking the system recommendations to the dish level, creating more tailored eater experiences. This is analogous to the music industry’s shift from selling albums to selling songs.
+
+## References 
+
+- [Food Discovery with Uber Eats: Recommending for the Marketplace](https://eng.uber.com/uber-eats-recommending-marketplace/)
+- [Leak reveals Uber’s $9.99 unlimited delivery Eats Pass](https://techcrunch.com/2019/05/21/uber-eats-pass-subscription/)
