@@ -12,7 +12,8 @@ output:
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
-#knitr::opts_chunk$set(eval = FALSE)
+knitr::opts_chunk$set(eval = FALSE) # runing the code in the code chunk when knit to html show an error
+
 ```
 
 # Will Lockdowns change the fitness industry, and what to expect of post-pandemic workouts 
@@ -27,7 +28,7 @@ knitr::opts_chunk$set(echo = TRUE)
       - [Fixing the Date Format](#fixing-the-date-format)
       - [Remove ponctuation and Unicode Characters](#remove-ponctuation-and-unicode-characters)
 - [Sentiment Analysis](#sentiment-analysis)
-- [R Markdown and other files](#)
+- [R Markdown and other files](https://github.com/aaitelmouden/DATA607S2020/tree/master/final%20Project)
 
 ## Introduction 
 
