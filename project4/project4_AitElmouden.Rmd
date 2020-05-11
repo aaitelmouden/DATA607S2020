@@ -33,9 +33,13 @@ We implement the document classification using tm/plyr packages, as preliminary 
 
 ### Corpus creation and The Data for our SPAM model
 
-Corpus is a large and structured set of texts used for analysis. We get our dataset from the UCI Machine Learning Repository https://archive.ics.uci.edu/ml/datasets/Spambase This so called “Spambase” dataset contains real data examples. So the author analysed real emails.
+Corpus is a large and structured set of texts used for analysis. We will use the dataset from the SMS Spam Collection to create a Spam Classifier. This can be downloaded from the [UCI Machine Learning Repository](https://archive.ics.uci.edu/ml/datasets/SMS+Spam+Collection).
 
-The dataset contains 57 attributes or features. These consist of:
+This dataset includes the text of SMS messages along with a label indicating whether the message is unwanted. Junk messages are labeled spam, while legitimate messages are labeled ham.
+
+The collection is composed by just one text file, where each line has the correct class followed by the raw message. We offer some examples bellow: 
+
+![classDiagram](attribute.png)
 
 
 ```{r}

@@ -1,0 +1,10 @@
+name: Publish Document
+title:
+username:
+account: rpubs
+server: rpubs.com
+hostUrl: rpubs.com
+appId: https://api.rpubs.com/api/v1/document/605372/0ea50e4da035400b80c251efcf8b01a3
+bundleId: https://api.rpubs.com/api/v1/document/605372/0ea50e4da035400b80c251efcf8b01a3
+url: http://rpubs.com/aaitelmouden/605372
+when: 1587955571.83241

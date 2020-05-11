@@ -1,0 +1,233 @@
+---
+title: "DATA607 Final Project Proposal"
+author: "Abdellah Ait Elmouden"
+date: "5/4/2020"
+output:
+  html_document:
+    css: ./project.css
+    highlight: pygments
+    theme: cerulean
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+#knitr::opts_chunk$set(eval = FALSE)
+```
+
+# Will Lockdowns change the fitness industry, and what to expect of post-pandemic workouts 
+
+## Table of Contents
+
+- [Introduction]()
+- [The Data](#the-data)
+    - [Extract Reddit urls](#extact-reddit-urls)
+    - [Extract Reddit Comments](#extract-reddit-comments)
+    - [Clean the Text Data](#clean-the-text-data)
+      - [Fixing the Date Format](#fixing-the-date-format)
+      - [Remove ponctuation and Unicode Characters](#remove-ponctuation-and-unicode-characters)
+- [Sentiment Analysis](#sentiment-analysis)
+- [R Markdown and other files](#)
+
+## Introduction 
+
+As lockdown was announced on US and other countries, many began to wonder how to stay fit
+if they couldn't go for a daily run or walk or workout in the gym. The way we work out may
+not be the same. Having ‘learned’ how to workout at home, plenty of people will stick with the
+at-home training apps And also because there are going to be social distancing norms. Forced
+to close their physical doors, gyms have had to adapt to the digital realm fast, joining the
+thousands of established influencers and dedicated apps already plugging various on-demand
+fitness routines.
+To see people opinion about the gym membership, and how many are making clever uses of their home for improving their physical and mental health during these challenging times. we’ll extract data from four subreddit r/Fitness, r/Showerthoughts r/fitness30plus r/homestead. The active discussions on these subreddits is where the question about the gym membership was asked, and the threads are a great place to extract data about people plans and concerns regarding stying fit during the pandemic
+lockdown.
+
+## The Data
+
+To collect the data we'll use the **RedditExtractoR** package, An R wrapper for Reddit API that provide a collection of tools for extracting structured data from reddit. This basic API interaction does not require any registration with Reddit or use of a token for usage in R.
+
+### Extract Reddit urls
+
+This first step we'll use the reddit_rls function to pull URLs of Reddit threads that include the specific search term. A data set we'll be created with all of the attributes of the thread. For our case , let’s find all of the links for threads and comments where the author “gym membership” is mentioned. We’ll create a data frame called “urls” that will list all of the relevant URLs.
+
+```{r}
+library(tidytext)
+library(stringr)
+library(dplyr)
+```
+
+
+```{r}
+library(RedditExtractoR)
+
+urls <- reddit_urls(
+  search_terms   = "gym membership", subreddit = "Showerthoughts fitness30plus", wait_time = 3, sort_by = "new",
+  page_threshold = 3
+)
+```
+
+This returns a data frame with 75 results including the URL, the title of the thread, posting date, the number of comments, and the name of the subreddit where it was posted.
+
+```{r}
+glimpse(urls)
+```
+
+### Extract Reddit Comments
+
+To collect all the comments of a particular thread we'll use the reddit_content function. For this purpose, we’ll use the “urls” data frame created above and find all of the content from the first URL, or thread, in that set. Note that this search can take some time, so it may be helpful to limit the search as applicable, so we used the sys.sleep(2) function.
+
+```{r}
+Reddit_df = data.frame()
+for (i in 1:75) { 
+content <- reddit_content(urls$URL[i])
+Reddit_df <- rbind(Reddit_df, content)
+Sys.sleep(2)
+}
+```
+let's take a look at the results :
+
+```{r}
+glimpse(Reddit_df)
+```
+
+### Clean the Text Data
+
+Cleaning is an essential step to take before the sentiment analysis.
+
+#### Fixing the Date Format
+
+first Pandemic lockdown started in US on [2020-03-19](https://en.wikipedia.org/wiki/Curfews_and_lockdowns_related_to_the_COVID-19_pandemic), so we'll need to keep comments related to post after that date. As we can see from the dataframe the post date is a Charachter in Day-Month-Year format, so the first step we'll converted to date and flip it to Y-M-d.
+
+```{r}
+Reddit_df$post_date <- format(as.Date(Reddit_df$post_date, format = "%d-%m-%Y", "%y-%m-%d"))
+head(Reddit_df)
+```
+
+Now by checking the dataframe we've noticed some title threads not related to what we are looking for Let's take a look at the extarcted reddit post title. As you can see from the results of the unique() function, there are three posts that seems interesting to explore for sentiment analysis :
+
+Post3 "The Quarantine is Making Rethink Gym Membership"
+Post1 "A gym membership is literally priceless.", 
+Post2 "It was a bad year to get a gym membership." 
+
+```{r}
+unique(Reddit_df$title)
+```
+
+So we'll create a new dataframe based on these titles and exclude others posts.
+
+```{r}
+clean_data <- filter(Reddit_df, post_date >= as.Date("20-03-19") & title == "The Quarantine is Making Rethink Gym Membership" | title == "A gym membership is literally priceless." | title == "It was a bad year to get a gym membership.") %>% 
+select(id, post_date, title, comment, comment_score)
+head(clean_data)
+```
+
+#### Remove ponctuation and Unicode Characters
+
+The next step in cleaning is to remove the punctions, symbols and some unicode charachters that may cause errors.
+
+```{r}
+clean_data$comment <- gsub('\\d|\U{FFFFFFFF}|\U3e33613c|\U3e63613c', '', clean_data$comment)
+clean_data$comment <- gsub('\031', "'", clean_data$comment) # replace the \031 unicde by '
+head(clean_data$comment)
+```
+
+## Sentiment Analysis
+
+For our sentiment analysis, we relied heavily on **sentimentr** package. The package is designed to quickly calculate text polarity sentiment at the sentence level and optionally aggregate by rows or grouping variable(s). It uses a dictionary lookup approach that tries to incorporate weighting for valence shifters (negation and amplifiers/deamplifiers).
+
+The first thing we should do is to split our text data into sentences (a process called sentence boundary disambiguation) via the get_sentences function. This can be handled within sentiment.
+
+```{r}
+library(stringi)
+library(sentimentr)
+
+mytext <- get_sentences(clean_data$comment)
+sentiment(mytext)
+```
+
+```{r}
+mytext <- get_sentences(mytext)
+sentiment_by(mytext)
+```
+
+A comment's score is simply the number of upvotes minus the number of downvotes. 
+
+```{r}
+(out <- with(
+   clean_data, 
+    sentiment_by(
+        get_sentences(comment), 
+        list(comment_score)
+    )
+))
+```
+
+**Plotting at Aggregated Sentiment**
+
+```{r}
+plot(out)
+```
+
+From the graph we can see that higher comment scors group get negative sentiments.
+
+**Plotting at the Sentence Level**
+
+This next plot uses Mathhew Jocker’s syuzhet package to calculate the smoothed sentiment across the duration of the text.
+
+On the y axis, you’ll notice the term “Emotional Valence.” From WikiPedia, Emotional Valence, as used in psychology, especially in discussing emotions, means the intrinsic attractiveness/“good”-ness (positive valence) or averseness/“bad”-ness (negative valence) of an event, object, or situation. The term also characterizes and categorizes specific emotions. For example, emotions popularly referred to as “negative”, such as anger and fear, have negative valence. Joy has positive valence. Positively valenced emotions are evoked by positively valenced events, objects, or situations. The term is also used to describe the hedonic tone of feelings, affect, certain behaviors (for example, approach and avoidance), goal attainment or nonattainment, and conformity with or violation of norms. Ambivalence can be viewed as conflict between positive and negative valence-carriers.
+
+The plot method for the class sentiment uses syuzhet's get_transformed_values combined with ggplot2 to make a reasonable, smoothed plot for the duration of the text based on percentage, allowing for comparison between plots of different texts. This plot gives the overall shape of the text's sentiment.
+
+```{r}
+plot(uncombine(out))
+```
+
+ 
+
+**Text Highlighting**
+
+We can also see the output from sentiment_by line by line with positive/negative sentences highlighted. The highlight function wraps a sentiment_by output to produces a highlighted HTML file (positive = green; negative = pink). 
+
+
+```{r}
+library(magrittr)
+library(dplyr)
+set.seed(2)
+
+clean_data %>%
+    filter(id %in% sample(unique(id), 30)) %>%
+    mutate(review = get_sentences(comment)) %$%
+    sentiment_by(review, id) %>%
+    highlight()
+```
+
+The results of the above sentiment analysis are quite interesting. As we read the highest score posts comments it was apparent that many people learned how to workout at home, and plenty will stick with the at-home training apps. While the sentiment analysis can only really determine some basic feelings it is interesting that the sentiment analysis revealed higher frequency of positive feeling about working at home. It's also been incredible to see how many people are making clever uses of their home for improving their physical and mental health during these challenging times.
+
+In another side other people agreed nstead of replacing physical gyms, home workouts will complement them.
+
+```{r}
+library(wordcloud2)
+library(tm)
+library(NLP)
+
+docs <- Corpus(VectorSource(mytext))
+docs <- tm_map(docs, removeWords, stopwords("english"))
+docs <- tm_map(docs, removeWords, c("the", "people", "britain", "british", "country", "thats"))
+dtm <- TermDocumentMatrix(docs) 
+matrix <- as.matrix(dtm) 
+words <- sort(rowSums(matrix),decreasing=TRUE) 
+df <- data.frame(word = names(words),freq=words)
+ #remove any additional specific words
+wordcloud2(data=df, size=1.6, color='random-dark')
+
+```
+
+
+**References**
+
+- Sentimentr gitube page https://github.com/trinker/sentimentr#examples
+- [Text Analysis of Kavanaugh Testimony from September 27th, 2018](https://rpubs.com/rhuebner/kavanaugh_text_analysis)
+- [How the Coronavirus and the Lockdown May Impact How We Exercise in the Future](https://www.menshealth.com/uk/fitness/a32215524/coronavirus-lockdown-fitness-change/)
+
+
+
+
